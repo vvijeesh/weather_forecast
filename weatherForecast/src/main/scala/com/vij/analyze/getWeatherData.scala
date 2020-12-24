@@ -30,8 +30,8 @@ object getWeatherData {
 
 
     //Read files from given list and process and create DF
-    for ( flist: Char <- fileList) {
-      prepareTablefromFile(spark,flist, className)
+    for ( flist <- fileList) {
+      prepareTablefromFile(spark,flist.toString, className)
     }
 
 
