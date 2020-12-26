@@ -1,50 +1,37 @@
 package com.vij.analyze
 
+import org.apache.spark.sql.{DataFrame, SparkSession}
+
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 object dataIntegrity {
 
-  //Class for Pressure readings upto 1858
-  case class barometer_1858(Year: String, Month: String, Day: String, MorningPressure: String, MorningTemp: String, NoonPressure: String, NoonTemp: String, EvePressure: String, EveTemp: String)
+  def checkDfIntegrity(given_df: DataFrame, spark: SparkSession) = {
+    //Get YY format for today : 2020
+    val yy_format = new SimpleDateFormat("yyyy")
+    val yy_date = yy_format.format(Calendar.getInstance().getTime())
 
+    val year_check_df = year_check(given_df, yy_date)
+    val month_check_df = month_check(year_check_df)
+    val dd_check_df = day_check(month_check_df)
 
-  //Class for Pressure readings from 1859 till 1861
-  case class barometer_1859(Year: String, Month: String, Day: String, MorningPressure: String, MorningTemp: String, MornPressureAtZero: String, NoonPressure: String, NoonTemp: String, NoonPressureAtZero: String, EvePressure: String, EveTemp: String, EvePressureAtZero: String)
+    //Return data checked DF
+    dd_check_df
+  }
 
-  //Class for Pressure readings from 1862 upto 1937
-  case class barometer_1862(Year: String, Month: String, Day: String, MorningPressure: String, NoonPressure: String, EvePressure: String)
+  def year_check(df: DataFrame, ydate: String) = {
+    //Validate Col 0
+    df.select("*").filter(df("col_0") <= ydate).toDF
+  }
 
-  //Class for Pressure readings from 1938 upto 1960
-  case class barometer_1938(Year: String, Month: String, Day: String, MorningPressure: String, NoonPressure: String, EvePressure: String)
+  def month_check(df: DataFrame) = {
+    //Validate Col 1 for months lesser than 12
+    df.select("*").filter(df("col_1") <= 12).toDF
+  }
 
-  //Class for Pressure readings from 1961 upto 2012
-  case class barometer_1961(Year: String, Month: String, Day: String, MorningPressure: String, NoonPressure: String, EvePressure: String)
-
-  //Class for Manual Pressure readings from 2013 upto 2017
-  case class barometer_2013(Year: String, Month: String, Day: String, MorningPressure: String, NoonPressure: String, EvePressure: String)
-
-  //Class for Automated Pressure readings from 2013 upto 2017
-  case class A_barometer_2013(Year: String, Month: String, Day: String, MorningPressure: String, NoonPressure: String, EvePressure: String)
-
-  //Check and Assign case class
-  def checkAndAssignCaseClass(givenName: String) = {
-    var className: String = ""
-    if (givenName.contains("barometer_1858")) {
-      className = "barometer_1858"
-    }
-    if (givenName.contains("barometer_1859")) {
-      className = "barometer_1859"
-    }
-    if (givenName.contains("barometer_1862")) {
-      className = "barometer_1862"
-    }
-    if (givenName.contains("barometer_1938")) {
-      className = "barometer_1938"
-    }
-    if (givenName.contains("barometer_1961")) {
-      className = "barometer_1961"
-    }
-    if (givenName.contains("barometer_2013")) {
-      className = "barometer_2013"
-    }
-    className
+  def day_check(df: DataFrame) = {
+    //Validate Col 2 for days lesser than 31
+    df.select("*").filter(df("col_2") <= 31).toDF
   }
 }

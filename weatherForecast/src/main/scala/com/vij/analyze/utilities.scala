@@ -1,6 +1,7 @@
 package com.vij.analyze
 
 import org.apache.spark.SparkFiles
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object utilities {
@@ -20,6 +21,26 @@ object utilities {
       .load(SparkFiles.get(getFileName(load_name)))
   }
 
-  //val stourl = "https://bolin.su.se/data/stockholm-thematic/files/stockholm-historical-weather-observations-2017/temperature/daily/raw/stockholm_daily_temp_obs_1961_2012_t1t2t3txtntm.txt"
-  // val weather_file = "F:\Weather Forecast\weatherForecast\src\main\resources\stockholm_daily_temp_obs_1961_2012_t1t2t3txtntm.txt"
+  def getFileAsRDD(filepath: String, spark: SparkSession) = {
+    spark.sparkContext.textFile(filepath)
+  }
+
+  def getDFfromArray(rddname:RDD[String],spark: SparkSession) = {
+
+    import spark.sqlContext.implicits._
+    rddname.map( x => x.replaceAll(""" +"""," ")).map(_.trim).toDF
+  }
+
+  def getFinalDF(dfname:DataFrame, spark:SparkSession) = {
+    import spark.implicits._
+
+    //Collect max col size in all of given DF
+    val num_cols = dfname.map(_.size).collect.reduce(_ max _)
+
+    //Create cols using the col size value
+    val selectCols = (0 until num_cols).map(i => $"value"(i).as(s"col_$i"))
+
+    dfname.select(selectCols:_*)
+  }
+
 }
