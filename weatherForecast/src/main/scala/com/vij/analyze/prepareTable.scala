@@ -5,6 +5,7 @@ import org.apache.spark.sql.SparkSession
 
 object prepareTable {
 
+  //Check Df and prepare table for verification
   def prepareTablefromFile(spark:SparkSession, fileName: String, className: String): Unit = {
 
     //Read file from spark and assign case class
@@ -14,6 +15,6 @@ object prepareTable {
 
 
     //Trim and prepare the table in DF
-    rdd.map( x => x.replaceAll(""" +"""," ")).map(_.trim.split(" ")).map( x => className(x(0).toString,x(1).toString,x(2).toString,x(3).toString,x(4).toString,x(5).toString)).toDF.show(20,false)
+    rdd.map( x => x.replaceAll(""" +"""," ")).map(_.trim.split(" ")).toDF.show(20,false)
   }
 }

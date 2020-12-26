@@ -2,12 +2,11 @@ package com.vij.analyze
 
 import scala.io.Source
 import scala.math.Fractional.Implicits.infixFractionalOps
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.SparkFiles
 import com.vij.analyze.utilities._
-import com.vij.analyze.dataCleansing
-import com.vij.analyze.dataIntegrity
 import com.vij.analyze.prepareTable._
+import com.vij.analyze.dataIntegrity._
 
 object getWeatherData {
   def main(args: Array[String]): Unit = {
@@ -17,9 +16,7 @@ object getWeatherData {
     * Args 1 - Table name
     * */
 
-    val fileList = args(0)
-    val table_name = args(1)
-    val className = args(2)
+    val fileFullPath = args(0)
 
     val spark = SparkSession
       .builder()
@@ -30,14 +27,21 @@ object getWeatherData {
 
 
     //Read files from given list and process and create DF
-    for ( flist <- fileList) {
-      prepareTablefromFile(spark,flist.toString, className)
-    }
+    val fileAsRDD = getFileAsRDD(fileFullPath, spark)
 
+    //Prepare DF from processed array
+    val fileAsDF = getDFfromArray(fileAsRDD, spark)
+
+    //Split and prepare final DF from given DF
+    val finalFileDF = getFinalDF(fileAsDF, spark)
+    finalFileDF.printSchema()
+
+    //Check integrity in DF values
+    val data_check_df = checkDfIntegrity(finalFileDF,spark)
+
+    println("Dataframe is created as data_check_df")
 
   }
-
-
 
 
 }
